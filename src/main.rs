@@ -44,19 +44,19 @@ fn file_content(filename: String) -> String {
 fn load_program(ctx: &mut Context, text: String) {
     for i in text.chars() {
         match i {
-            '+' => {ctx.program[ctx.pc] = Operation::INCR},
-            '-' => {ctx.program[ctx.pc] = Operation::DECR},
-            '<' => {ctx.program[ctx.pc] = Operation::LEFT},
-            '>' => {ctx.program[ctx.pc] = Operation::RIGHT},
-            '[' => {ctx.program[ctx.pc] = Operation::BEGIN},
-            ']' => {ctx.program[ctx.pc] = Operation::END},
-            '.' => {ctx.program[ctx.pc] = Operation::OUTPUT},
-            ',' => {ctx.program[ctx.pc] = Operation::INPUT},
-            _ => {ctx.pc -= 1}
+            '+' => {ctx.program[ctx.pc] = Operation::INCR;      ctx.pc += 1},
+            '-' => {ctx.program[ctx.pc] = Operation::DECR;      ctx.pc += 1},
+            '<' => {ctx.program[ctx.pc] = Operation::LEFT;      ctx.pc += 1},
+            '>' => {ctx.program[ctx.pc] = Operation::RIGHT;     ctx.pc += 1},
+            '[' => {ctx.program[ctx.pc] = Operation::BEGIN;     ctx.pc += 1},
+            ']' => {ctx.program[ctx.pc] = Operation::END;       ctx.pc += 1},
+            '.' => {ctx.program[ctx.pc] = Operation::OUTPUT;    ctx.pc += 1},
+            ',' => {ctx.program[ctx.pc] = Operation::INPUT;     ctx.pc += 1},
+            _ => {}
         }
-        ctx.pc += 1
     }
     ctx.program[ctx.pc] = Operation::EOF;
+    ctx.pc = 0;
 }
 
 fn incr(ctx: &mut Context) {
@@ -76,33 +76,36 @@ fn decr(ctx: &mut Context) {
 }
 
 fn left(ctx: &mut Context) {
-    if ctx.pc == 0 {
-        ctx.pc = ctx.program.len();
+    if ctx.sp == 0 {
+        ctx.sp = ctx.program.len();
     } else {
-        ctx.pc -= 1;
+        ctx.sp -= 1;
     }
 }
 
 fn right(ctx: &mut Context) {
-    if ctx.pc == ctx.program.len() {
-        ctx.pc = 0;
+    if ctx.sp == ctx.program.len() {
+        ctx.sp = 0;
     } else {
-        ctx.pc += 1;
+        ctx.sp += 1;
     }
 }
 
 fn begin(ctx: &mut Context) {
-    ctx.call_stack.push(ctx.pc)
+    ctx.call_stack.push(ctx.pc - 1)
 }
 
 fn end(ctx: &mut Context) {
-    match ctx.call_stack.pop() {
-        Some(v) => ctx.pc = v,
-        None => {
-            println!("Hit unexpected loop ending at");
-            exit(1);
+    if ctx.ram[ctx.sp] != 0 {
+        match ctx.call_stack.pop() {
+            Some(v) => ctx.pc = v,
+            None => {
+                println!("Hit unexpected loop ending at");
+                exit(1);
+            }
         }
     }
+    
 }
 
 fn eof(ctx: &mut Context) {
@@ -117,18 +120,16 @@ fn eof(ctx: &mut Context) {
 fn output(ctx: &mut Context) {
     print!("{}", match String::from_utf8(Vec::from([ctx.ram[ctx.sp]])) {
         Ok(v) => v,
-        Err(_) => {
-            println!("Error printing from STDOUT");
+        Err(e) => {
+            println!("Error printing to STDOUT: {}", e);
             exit(1);
         }
     })
 }
 
 fn input(ctx: &mut Context) {
-    let stdinbuffer = io::stdin();
     let buffer: &mut [u8] = &mut [0, 1];
-    let mut take = stdinbuffer.take(1);
-    let result = take.read(buffer);
+    let result = io::stdin().take(1).read(buffer);
     match result {
         Ok(_) => {},
         Err(_) => {
@@ -141,16 +142,17 @@ fn input(ctx: &mut Context) {
 
 fn run(ctx: &mut Context) {
     while ctx.program[ctx.pc] != Operation::EOF {
+        println!("\tprogram[{}] = {:?}\tram[{}] = {}", ctx.pc, ctx.program[ctx.pc], ctx.sp, ctx.ram[ctx.sp]);
         match ctx.program[ctx.pc] {
-            Operation::INCR => incr(ctx),
-            Operation::DECR => decr(ctx),
-            Operation::LEFT => left(ctx),
-            Operation::RIGHT => right(ctx),
-            Operation::BEGIN => begin(ctx),
-            Operation::END => end(ctx),
-            Operation::EOF => eof(ctx),
-            Operation::OUTPUT => output(ctx),
-            Operation::INPUT => input(ctx),
+            Operation::INCR     => incr(ctx),
+            Operation::DECR     => decr(ctx),
+            Operation::LEFT     => left(ctx),
+            Operation::RIGHT    => right(ctx),
+            Operation::BEGIN    => begin(ctx),
+            Operation::END      => end(ctx),
+            Operation::EOF      => eof(ctx),
+            Operation::OUTPUT   => output(ctx),
+            Operation::INPUT    => input(ctx),
         };
         ctx.pc += 1;
     }
@@ -167,6 +169,5 @@ fn main() {
     let filename = filename_from_args();
     let file_content = file_content(filename);
     load_program(ctx, file_content);
-    ctx.pc = 0;
     run(ctx);
 }
