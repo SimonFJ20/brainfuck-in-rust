@@ -1,31 +1,10 @@
 
+mod parser;
+mod vm;
+
+use std::env::args;
 use std::process::exit;
 use std::fs::read_to_string;
-use std::env::args;
-use std::io::prelude::*;
-use std::io;
-
-#[derive(Clone, Copy, PartialEq, Debug)]
-enum Operation {
-    EOF,
-    INCR,
-    DECR,
-    LEFT,
-    RIGHT,
-    BEGIN,
-    END,
-    OUTPUT,
-    INPUT,
-}
-
-struct Context {
-    ram: [u8; 30000],
-    call_stack: Vec<usize>,
-    program: [Operation; 10000],
-    sp: usize,
-    pc: usize,
-}
-
 
 fn filename_from_args() -> String {
     let args: Vec<String> = args().collect();
@@ -41,135 +20,12 @@ fn file_content(filename: String) -> String {
         .expect("Something went wrong reading the file");
 }
 
-fn load_program(ctx: &mut Context, text: String) {
-    for i in text.chars() {
-        match i {
-            '+' => {ctx.program[ctx.pc] = Operation::INCR;      ctx.pc += 1},
-            '-' => {ctx.program[ctx.pc] = Operation::DECR;      ctx.pc += 1},
-            '<' => {ctx.program[ctx.pc] = Operation::LEFT;      ctx.pc += 1},
-            '>' => {ctx.program[ctx.pc] = Operation::RIGHT;     ctx.pc += 1},
-            '[' => {ctx.program[ctx.pc] = Operation::BEGIN;     ctx.pc += 1},
-            ']' => {ctx.program[ctx.pc] = Operation::END;       ctx.pc += 1},
-            '.' => {ctx.program[ctx.pc] = Operation::OUTPUT;    ctx.pc += 1},
-            ',' => {ctx.program[ctx.pc] = Operation::INPUT;     ctx.pc += 1},
-            _ => {}
-        }
-    }
-    ctx.program[ctx.pc] = Operation::EOF;
-    ctx.pc = 0;
-}
-
-fn incr(ctx: &mut Context) {
-    if ctx.ram[ctx.sp] == 255 {
-        ctx.ram[ctx.sp] = 0;
-    } else {
-        ctx.ram[ctx.sp] += 1;
-    }
-}
-
-fn decr(ctx: &mut Context) {
-    if ctx.ram[ctx.sp] == 0 {
-        ctx.ram[ctx.sp] = 255;
-    } else {
-        ctx.ram[ctx.sp] -= 1;
-    }
-}
-
-fn left(ctx: &mut Context) {
-    if ctx.sp == 0 {
-        ctx.sp = ctx.program.len();
-    } else {
-        ctx.sp -= 1;
-    }
-}
-
-fn right(ctx: &mut Context) {
-    if ctx.sp == ctx.program.len() {
-        ctx.sp = 0;
-    } else {
-        ctx.sp += 1;
-    }
-}
-
-fn begin(ctx: &mut Context) {
-    ctx.call_stack.push(ctx.pc - 1)
-}
-
-fn end(ctx: &mut Context) {
-    // println!("ram[{}] = {}", ctx.sp, ctx.ram[ctx.sp]);
-    match ctx.call_stack.pop() {
-        Some(v) => if ctx.ram[ctx.sp] != 0 {ctx.pc = v},
-        None => {
-            println!("Hit unexpected loop ending at");
-            exit(1);
-        }
-    }
-}
-
-fn eof(ctx: &mut Context) {
-    if ctx.ram[0] == 0 {
-        exit(0)
-    } else {
-        println!("Exited with error code {}", ctx.ram[0]);
-        exit(ctx.ram[0].into());
-    }
-}
-
-fn output(ctx: &mut Context) {
-    print!("{}", ctx.ram[ctx.sp] as char);
-}
-
-fn input(ctx: &mut Context) {
-    let buffer: &mut [u8] = &mut [0, 1];
-    let result = io::stdin().take(1).read(buffer);
-    match result {
-        Ok(_) => {},
-        Err(_) => {
-            println!("Error retrieving from STDIN");
-            exit(1);
-        }
-    }
-    ctx.ram[ctx.sp] = buffer[0];
-}
-
-fn halt() {
-    let inputbuffer = &mut String::new();
-    match std::io::stdin().read_line(inputbuffer) {
-        Ok(_) => {},
-        Err(_) => {},
-    }
-}
-
-fn run(ctx: &mut Context) {
-    while ctx.program[ctx.pc] != Operation::EOF {
-        print!("\tprogram[{}] = {:?}\t{:?}\tram[{}] = {} -> ", ctx.pc, ctx.program[ctx.pc], ctx.call_stack, ctx.sp, ctx.ram[ctx.sp]);
-        match ctx.program[ctx.pc] {
-            Operation::INCR     => incr(ctx),
-            Operation::DECR     => decr(ctx),
-            Operation::LEFT     => left(ctx),
-            Operation::RIGHT    => right(ctx),
-            Operation::BEGIN    => begin(ctx),
-            Operation::END      => end(ctx),
-            Operation::EOF      => eof(ctx),
-            Operation::OUTPUT   => output(ctx),
-            Operation::INPUT    => input(ctx),
-        };
-        println!("ram[{}] = {}\t{:?}", ctx.sp, ctx.ram[ctx.sp], ctx.call_stack);
-        halt();
-        ctx.pc += 1;
-    }
-}
 
 fn main() {
-    let ctx = &mut Context {
-        ram: [0; 30000],
-        program: [Operation::EOF; 10000],
-        call_stack: Vec::new(),
-        sp: 0,
-        pc: 0,
-    };
-    let filename = filename_from_args();
-    let file_content = file_content(filename);
-    load_program(ctx, file_content);
-    run(ctx);
+    let text = file_content(filename_from_args());
+    let program = parser::parse(text);
+    for (i, v) in program.iter().enumerate() {
+        println!("{}: {:#?}", i, v);
+    }
+    // vm::eval(program);
 }
