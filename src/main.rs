@@ -96,16 +96,14 @@ fn begin(ctx: &mut Context) {
 }
 
 fn end(ctx: &mut Context) {
-    if ctx.ram[ctx.sp] != 0 {
-        match ctx.call_stack.pop() {
-            Some(v) => ctx.pc = v,
-            None => {
-                println!("Hit unexpected loop ending at");
-                exit(1);
-            }
+    // println!("ram[{}] = {}", ctx.sp, ctx.ram[ctx.sp]);
+    match ctx.call_stack.pop() {
+        Some(v) => if ctx.ram[ctx.sp] != 0 {ctx.pc = v},
+        None => {
+            println!("Hit unexpected loop ending at");
+            exit(1);
         }
     }
-    
 }
 
 fn eof(ctx: &mut Context) {
@@ -118,13 +116,7 @@ fn eof(ctx: &mut Context) {
 }
 
 fn output(ctx: &mut Context) {
-    print!("{}", match String::from_utf8(Vec::from([ctx.ram[ctx.sp]])) {
-        Ok(v) => v,
-        Err(e) => {
-            println!("Error printing to STDOUT: {}", e);
-            exit(1);
-        }
-    })
+    print!("{}", ctx.ram[ctx.sp] as char);
 }
 
 fn input(ctx: &mut Context) {
@@ -137,12 +129,20 @@ fn input(ctx: &mut Context) {
             exit(1);
         }
     }
-    ctx.ram[ctx.sp] = buffer[0]
+    ctx.ram[ctx.sp] = buffer[0];
+}
+
+fn halt() {
+    let inputbuffer = &mut String::new();
+    match std::io::stdin().read_line(inputbuffer) {
+        Ok(_) => {},
+        Err(_) => {},
+    }
 }
 
 fn run(ctx: &mut Context) {
     while ctx.program[ctx.pc] != Operation::EOF {
-        println!("\tprogram[{}] = {:?}\tram[{}] = {}", ctx.pc, ctx.program[ctx.pc], ctx.sp, ctx.ram[ctx.sp]);
+        print!("\tprogram[{}] = {:?}\t{:?}\tram[{}] = {} -> ", ctx.pc, ctx.program[ctx.pc], ctx.call_stack, ctx.sp, ctx.ram[ctx.sp]);
         match ctx.program[ctx.pc] {
             Operation::INCR     => incr(ctx),
             Operation::DECR     => decr(ctx),
@@ -154,6 +154,8 @@ fn run(ctx: &mut Context) {
             Operation::OUTPUT   => output(ctx),
             Operation::INPUT    => input(ctx),
         };
+        println!("ram[{}] = {}\t{:?}", ctx.sp, ctx.ram[ctx.sp], ctx.call_stack);
+        halt();
         ctx.pc += 1;
     }
 }
