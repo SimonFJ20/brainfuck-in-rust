@@ -59,10 +59,7 @@ fn pair_braces(tokens: &mut Vec<Token>) -> Vec<BracePair> {
 }
 
 fn zero_valued(op: Ops) -> Instruction {
-    Instruction {
-        op: op,
-        value: 0
-    }
+    Instruction { op: op, value: 0 }
 }
 
 fn jz_instruction(index: usize, brace_pairs: &mut Vec<BracePair>) -> Instruction {
@@ -101,15 +98,13 @@ fn token_to_instruction(
 }
 
 fn tokens_to_program(tokens: &mut Vec<Token>) -> Vec<Instruction> {
-    let mut program: Vec<Instruction> = Vec::new();
     let brace_pairs = &mut pair_braces(tokens);
-    for (index, token) in tokens.iter().enumerate() {
-        program.push(token_to_instruction(index, token, brace_pairs));
-    }
-    program.push(Instruction {
-        op: Ops::EXIT,
-        value: 0,
-    });
+    let mut program: Vec<Instruction> = tokens
+        .iter()
+        .enumerate()
+        .map(|(index, token)| token_to_instruction(index, token, brace_pairs))
+        .collect();
+    program.push(zero_valued(Ops::EXIT));
     return program;
 }
 
