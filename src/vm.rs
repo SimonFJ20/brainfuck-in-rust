@@ -51,7 +51,7 @@ fn jz(ctx: &mut Context) {
 }
 
 fn jmp(ctx: &mut Context) {
-    ctx.pc = ctx.program[ctx.pc].value;
+    ctx.pc = ctx.program[ctx.pc].value - 1;
 }
 
 fn input(ctx: &mut Context) {
@@ -76,7 +76,7 @@ fn run(ctx: &mut Context) {
             Ops::INPUT   => input(ctx),
             Ops::OUTPUT  => output(ctx),
             Ops::JZ      => jz(ctx),
-            Ops::JMP     => {jmp(ctx); ctx.pc -= 1},
+            Ops::JMP     => jmp(ctx),
         }
         ctx.pc += 1;
     }

@@ -1,7 +1,7 @@
 
 use crate::vm::*;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 enum Token {
     ADD,
     SUB,
@@ -36,29 +36,27 @@ struct BracePair {
     end: usize,
 }
 
-fn get_brace_pairs(tokens: Vec<Token>) -> Vec<BracePair> {
-    let brace_pairs: Vec<BracePair> = Vec::new();
-    let begin_braces: Vec<usize> = Vec::new();
+fn get_brace_pairs(tokens: &mut Vec<Token>) -> Vec<BracePair> {
+    let mut brace_pairs: Vec<BracePair> = Vec::new();
+    let mut begin_braces: Vec<usize> = Vec::new();
     for (i, v) in tokens.iter().enumerate() {
         match v {
             Token::BEGIN => begin_braces.push(i),
             Token::END => brace_pairs.push(BracePair {
+                begin: begin_braces.pop().expect("_"),
                 end: i,
-                begin: match begin_braces.pop() {
-                    Some(v) => v,
-                    None => { panic!("punjabi no begin_brace"); }
-                },
             }),
             _ => {}
         }
     }
+    brace_pairs.reverse();
     return brace_pairs;
 }
 
-fn get_ops(tokens: Vec<Token>) -> Vec<Instruction> {
+fn get_ops(tokens: &mut Vec<Token>) -> Vec<Instruction> {
     let mut program: Vec<Instruction> = Vec::new();
     let mut brace_pairs = get_brace_pairs(tokens);
-    for token in tokens {
+    for (i, token) in tokens.iter().enumerate() {
         match token {
             Token::ADD     => {program.push(Instruction {op: Ops::ADD,     value: 0})},
             Token::SUB     => {program.push(Instruction {op: Ops::SUB,     value: 0})},
@@ -69,13 +67,15 @@ fn get_ops(tokens: Vec<Token>) -> Vec<Instruction> {
             Token::BEGIN   => {
                 program.push(Instruction {
                     op: Ops::JZ,
-                    value: brace_pairs.search()
+                    value: brace_pairs.iter().find(|&p| p.begin == i).expect(&format!("bruh moment at {}, {:?}", i, token)).end
                 })
             },
-            Token::END     => {program.push(Instruction {op: Ops::JMP,     value: match begin_brackets.pop() {
-                Some(v) => {v},
-                None => {panic!("punjabi no end brace")}
-            }})},
+            Token::END     => {
+                program.push(Instruction {
+                    op: Ops::JMP,
+                    value: brace_pairs.pop().expect("_").begin
+            })
+            },
         }
     }
     program.push(Instruction {op: Ops::EXIT, value: 0});
@@ -83,7 +83,11 @@ fn get_ops(tokens: Vec<Token>) -> Vec<Instruction> {
 }
 
 pub fn parse(text: String) -> Vec<Instruction> {
-    let tokens = tokenize(text);
+    let tokens = &mut tokenize(text);
+    let brace_pairs = get_brace_pairs(tokens);
+    for (i, v) in brace_pairs.iter().enumerate() {
+        println!("{}: {} -> {}", i, v.begin, v.end);
+    };
     return get_ops(tokens);
 }
 
