@@ -25,7 +25,7 @@ fn main() {
     let text = file_content(filename_from_args());
     let program = parser::parse(text);
     for (i, v) in program.iter().enumerate() {
-        println!("{}: {:#?}", i, v);
+        println!("{}: {:?}", i, v);
     }
     // vm::eval(program);
 }

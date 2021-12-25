@@ -13,7 +13,7 @@ pub enum Ops {
     INPUT,
     OUTPUT,
     JZ,
-    JNZ,
+    JMP,
 }
 
 #[derive(Debug)]
@@ -50,8 +50,8 @@ fn jz(ctx: &mut Context) {
     if ctx.stack[ctx.sp] == 0 { ctx.pc = ctx.program[ctx.pc].value }
 }
 
-fn jnz(ctx: &mut Context) {
-    if ctx.stack[ctx.sp] != 0 { ctx.pc = ctx.program[ctx.pc].value }
+fn jmp(ctx: &mut Context) {
+    ctx.pc = ctx.program[ctx.pc].value;
 }
 
 fn input(ctx: &mut Context) {
@@ -76,7 +76,7 @@ fn run(ctx: &mut Context) {
             Ops::INPUT   => input(ctx),
             Ops::OUTPUT  => output(ctx),
             Ops::JZ      => jz(ctx),
-            Ops::JNZ     => jnz(ctx),
+            Ops::JMP     => {jmp(ctx); ctx.pc -= 1},
         }
         ctx.pc += 1;
     }
