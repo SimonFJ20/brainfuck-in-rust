@@ -118,19 +118,19 @@ The VM uses a executing-"context" to keep track of the program and stack.
 
 The stack is a `Vec` of bytes. 
 
-Brainfuck specifies the stack to have a minimum size of `3 * 10^5 <=> 30,000`, but the VM uses a dymanic `Vec` for the stack, therefore it doesn't allocate ram it doesn't need, and it can grow to infinity size, limited by hardware of course.
+Brainfuck specifies the stack to have a minimum size of `3 * 10^5 <=> 30,000`, but the VM uses a dynamic `Vec` for the stack, therefore it doesn't allocate ram it doesn't need, and it can grow to infinity size, limited by hardware of course.
 
-Though begin a dynamic `Vec`, each time the stack grows, the VM might have to reallocate and move the entire stack in ram.
+Though a dynamic `Vec`, each time the stack grows, the VM might have to reallocate and move the entire stack in ram.
 
 ### Execution
 
-The VM runs through each `Instruction` of the program, matches the operation (`Ops`) and executes the corrosponding function.
+The VM runs through each `Instruction` of the program, matches the operation (`Ops`) and executes the corresponding function.
 
 It increments the program counter (`ctx.pc`) after each iteration.
 
 It starts with the program counter (`ctx.pc`) and stack pointer (`ctx.sp`) at `0`.
 
-It runs until it reaches and `Ops::END`-instruction.
+It runs until it reaches an `Ops::END`-instruction.
 
 ### Instructions
 
@@ -234,7 +234,7 @@ Short for '(j)ump to instruction if stack location value is equal to (z)ero'
 
 `ctx.stack[ctx.sp] == 0 ? ctx.pc = ctx.program[ctx.pc].value`
 
-Jumps to the matching `]` for the program counter (`ctx.pc`) then to be incremented, skipping the `]`.
+Jumps to the matching `]`, skipping the `]`, because the program counter (`ctx.pc`) gets incremented.
 
 | Name | Value |
 |------|-------|
