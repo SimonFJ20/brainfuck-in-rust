@@ -3,13 +3,13 @@
 
 Efficient [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck) Interpreter in Rust
 
-"Efficent" because:
+"Efficient" because:
 1. [Rust is fast](https://www.rust-lang.org/)
 2. It parses the text to instructions before interpreting
 
 The VM's "memory" is refered to as 'the stack', acknowledging that 'the stack' isn't a [Stack](https://en.wikipedia.org/wiki/Stack_(abstract_data_type)) but a variable [Array](https://en.wikipedia.org/wiki/Array_data_type).
 
-But not as efficent as it could be, because the VM's stack is a `Vec`, so the VM may need to reallocate the entire stack when the stack grows.
+But not as efficient as it could be, because the VM's stack is a `Vec`, so the VM may need to reallocate the entire stack when the stack grows.
 
 **This interpreter has no error handling, and will only assume your program to be correct.**
 
