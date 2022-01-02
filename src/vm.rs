@@ -52,10 +52,10 @@ fn left(ctx: &mut Context) {
 }
 
 fn right(ctx: &mut Context) {
+    ctx.sp += 1;
     if ctx.sp >= ctx.stack.len() - 1 {
         ctx.stack.push(0)
     }
-    ctx.sp += 1;
 }
 
 fn jz(ctx: &mut Context) {
