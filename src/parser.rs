@@ -48,7 +48,7 @@ fn pair_brackets(tokens: &mut Vec<Token>) -> Vec<BracketPair> {
         match v {
             Token::BEGIN => begin_brackets.push(i),
             Token::END => bracket_pairs.push(BracketPair {
-                begin: begin_brackets.pop().expect("_"),
+                begin: begin_brackets.pop().expect("bracket mismatch"),
                 end: i,
             }),
             _ => {}
@@ -68,7 +68,7 @@ fn jz_instruction(index: usize, bracket_pairs: &mut Vec<BracketPair>) -> Instruc
         value: bracket_pairs
             .iter()
             .find(|&p| p.begin == index)
-            .expect("_")
+            .expect("bracket mismatch")
             .end,
     }
 }
@@ -76,7 +76,7 @@ fn jz_instruction(index: usize, bracket_pairs: &mut Vec<BracketPair>) -> Instruc
 fn jmp_instruction(bracket_pairs: &mut Vec<BracketPair>) -> Instruction {
     Instruction {
         op: Ops::JMP,
-        value: bracket_pairs.pop().expect("_").begin,
+        value: bracket_pairs.pop().expect("bracket mismatch").begin,
     }
 }
 
