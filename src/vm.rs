@@ -45,7 +45,7 @@ fn sub(ctx: &mut Context) {
 
 fn left(ctx: &mut Context) {
     if ctx.sp == 0 {
-        ctx.sp = ctx.program.len() - 1
+        panic!("the stack pointer must not go below zero")
     } else {
         ctx.sp -= 1
     }
@@ -53,7 +53,7 @@ fn left(ctx: &mut Context) {
 
 fn right(ctx: &mut Context) {
     ctx.sp += 1;
-    if ctx.sp >= ctx.stack.len() - 1 {
+    if ctx.sp >= ctx.stack.len() {
         ctx.stack.push(0)
     }
 }
