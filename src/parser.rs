@@ -36,36 +36,36 @@ fn text_to_tokens(text: String) -> Vec<Token> {
     return tokens;
 }
 
-struct BracePair {
+struct BracketPair {
     begin: usize,
     end: usize,
 }
 
-fn pair_braces(tokens: &mut Vec<Token>) -> Vec<BracePair> {
-    let mut brace_pairs: Vec<BracePair> = Vec::new();
-    let mut begin_braces: Vec<usize> = Vec::new();
+fn pair_brackets(tokens: &mut Vec<Token>) -> Vec<BracketPair> {
+    let mut bracket_pairs: Vec<BracketPair> = Vec::new();
+    let mut begin_brackets: Vec<usize> = Vec::new();
     for (i, v) in tokens.iter().enumerate() {
         match v {
-            Token::BEGIN => begin_braces.push(i),
-            Token::END => brace_pairs.push(BracePair {
-                begin: begin_braces.pop().expect("_"),
+            Token::BEGIN => begin_brackets.push(i),
+            Token::END => bracket_pairs.push(BracketPair {
+                begin: begin_brackets.pop().expect("too many end brackets"),
                 end: i,
             }),
             _ => {}
         }
     }
-    brace_pairs.reverse();
-    return brace_pairs;
+    bracket_pairs.reverse();
+    return bracket_pairs;
 }
 
 fn zero_valued(op: Ops) -> Instruction {
     Instruction { op: op, value: 0 }
 }
 
-fn jz_instruction(index: usize, brace_pairs: &mut Vec<BracePair>) -> Instruction {
+fn jz_instruction(index: usize, bracket_pairs: &mut Vec<BracketPair>) -> Instruction {
     Instruction {
         op: Ops::JZ,
-        value: brace_pairs
+        value: bracket_pairs
             .iter()
             .find(|&p| p.begin == index)
             .expect("_")
@@ -73,17 +73,17 @@ fn jz_instruction(index: usize, brace_pairs: &mut Vec<BracePair>) -> Instruction
     }
 }
 
-fn jmp_instruction(brace_pairs: &mut Vec<BracePair>) -> Instruction {
+fn jmp_instruction(bracket_pairs: &mut Vec<BracketPair>) -> Instruction {
     Instruction {
         op: Ops::JMP,
-        value: brace_pairs.pop().expect("_").begin,
+        value: bracket_pairs.pop().expect("_").begin,
     }
 }
 
 fn token_to_instruction(
     index: usize,
     token: &Token,
-    brace_pairs: &mut Vec<BracePair>,
+    bracket_pairs: &mut Vec<BracketPair>,
 ) -> Instruction {
     match token {
         Token::ADD => zero_valued(Ops::ADD),
@@ -92,17 +92,17 @@ fn token_to_instruction(
         Token::RIGHT => zero_valued(Ops::RIGHT),
         Token::INPUT => zero_valued(Ops::INPUT),
         Token::OUTPUT => zero_valued(Ops::OUTPUT),
-        Token::BEGIN => jz_instruction(index, brace_pairs),
-        Token::END => jmp_instruction(brace_pairs),
+        Token::BEGIN => jz_instruction(index, bracket_pairs),
+        Token::END => jmp_instruction(bracket_pairs),
     }
 }
 
 fn tokens_to_program(tokens: &mut Vec<Token>) -> Vec<Instruction> {
-    let brace_pairs = &mut pair_braces(tokens);
+    let bracket_pairs = &mut pair_brackets(tokens);
     let mut program: Vec<Instruction> = tokens
         .iter()
         .enumerate()
-        .map(|(index, token)| token_to_instruction(index, token, brace_pairs))
+        .map(|(index, token)| token_to_instruction(index, token, bracket_pairs))
         .collect();
     program.push(zero_valued(Ops::EXIT));
     return program;
