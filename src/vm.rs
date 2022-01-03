@@ -21,10 +21,10 @@ pub struct Instruction {
 }
 
 pub struct Context {
-    program: Vec<Instruction>,
-    pc: usize,
-    stack: Vec<u8>,
-    sp: usize,
+    pub program: Vec<Instruction>,
+    pub pc: usize,
+    pub stack: Vec<u8>,
+    pub sp: usize,
 }
 
 fn add(ctx: &mut Context) {
@@ -102,12 +102,6 @@ fn run(ctx: &mut Context) {
     }
 }
 
-pub fn eval(program: Vec<Instruction>) {
-    let ctx = &mut Context {
-        program: program,
-        pc: 0,
-        stack: Vec::from([0]),
-        sp: 0,
-    };
+pub fn eval(ctx: &mut Context) {
     run(ctx);
 }
