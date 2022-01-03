@@ -19,7 +19,8 @@ fn html_page(body: String) -> String {
         max-width: 100%;
     }
     td {
-        min-width: 3rem;
+        min-width: 4rem;
+        text-align: center;
     }
     </style>");
     res.push_str(&body);
@@ -38,19 +39,31 @@ fn dump_sp(ctx: &mut Context) -> String {
 fn dump_stack(ctx: &mut Context) -> String {
     let mut res = String::new();
     res.push_str("<table><tr><td>Idx Hex</td>");    
-    for i in 0..ctx.stack.len() {
-        res.push_str(&format!("<td class=\"i{}\">{:#X}</td>", i, i));
+    for (i, v) in ctx.stack.iter().enumerate() {
+        res.push_str(&format!("<td class=\"i{} v{}\">{:#X}</td>", i, v, i));
     }
     res.push_str("</tr><tr><td>Idx Dec</td>");
-    for i in 0..ctx.stack.len() {
-        res.push_str(&format!("<td class=\"i{}\">{}</td>", i, i));
-    }
-    res.push_str("</tr><tr><td>Value</td>");
     for (i, v) in ctx.stack.iter().enumerate() {
-        res.push_str(&format!("<td class=\"i{}\">{}</td>", i, v));
+        res.push_str(&format!("<td class=\"i{} v{}\">{}</td>", i, v, i));
+    }
+    res.push_str("</tr><tr><td>Value Dec</td>");
+    for (i, v) in ctx.stack.iter().enumerate() {
+        res.push_str(&format!("<td class=\"i{} v{}\">{}</td>", i, v, v));
+    }
+    res.push_str("</tr><tr><td>Value Hex</td>");
+    for (i, v) in ctx.stack.iter().enumerate() {
+        res.push_str(&format!("<td class=\"i{} v{}\">{:#X}</td>", i, v, v));
+    }
+    res.push_str("</tr><tr><td>Value Char</td>");
+    for (i, v) in ctx.stack.iter().enumerate() {
+        res.push_str(&format!("<td class=\"i{} v{}\">{}</td>", i, v, *v as char));
     }
     res.push_str("</tr></table>");
-    res.push_str(&format!("<style>.i{} {{ background-color: #BFF  }}</style>", ctx.sp));
+    res.push_str(&format!("<style>
+    .v0 {{ background-color: #EEE }}
+    .v255 {{ background-color: #FFE }}
+    .i{} {{ background-color: #BFF  }} 
+    </style>", ctx.sp));
     return res;
 }
 
