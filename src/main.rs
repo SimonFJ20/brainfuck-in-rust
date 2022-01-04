@@ -1,9 +1,8 @@
 mod parser;
 mod vm;
 mod dump;
+mod optimizer;
 
-use crate::dump::dump;
-use crate::vm::Context;
 use std::env::args;
 use std::fs::read_to_string;
 use std::process::exit;
@@ -33,14 +32,10 @@ fn dump_arg_exists() -> bool {
 fn main() {
     let text = file_content(filename_from_args());
     let program = parser::parse(text);
-    let ctx = &mut Context {
-        program: program,
-        pc: 0,
-        stack: Vec::from([0]),
-        sp: 0,
-    };
+    let optimized_program = optimizer::optimize(program);
+    let ctx = &mut vm::Context::new(optimized_program);
     vm::eval(ctx);
     if dump_arg_exists() {
-        dump(ctx);
+        dump::dump(ctx);
     }
 }

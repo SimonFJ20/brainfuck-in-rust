@@ -59,24 +59,26 @@ fn pair_brackets(tokens: &mut Vec<Token>) -> Vec<BracketPair> {
 }
 
 fn zero_valued(op: Ops) -> Instruction {
-    Instruction { op: op, value: 0 }
+    Instruction { op: op, offset: 0, value: 0 }
 }
 
 fn jz_instruction(index: usize, bracket_pairs: &mut Vec<BracketPair>) -> Instruction {
     Instruction {
         op: Ops::JZ,
-        value: bracket_pairs
+        offset: bracket_pairs
             .iter()
             .find(|&p| p.begin == index)
             .expect("bracket mismatch")
             .end,
+        value: 0,
     }
 }
 
 fn jmp_instruction(bracket_pairs: &mut Vec<BracketPair>) -> Instruction {
     Instruction {
         op: Ops::JMP,
-        value: bracket_pairs.pop().expect("bracket mismatch").begin,
+        offset: bracket_pairs.pop().expect("bracket mismatch").begin,
+        value: 0,
     }
 }
 
@@ -97,7 +99,7 @@ fn token_to_instruction(
     }
 }
 
-fn tokens_to_program(tokens: &mut Vec<Token>) -> Vec<Instruction> {
+fn tokens_to_program(tokens: &mut Vec<Token>) -> Program {
     let bracket_pairs = &mut pair_brackets(tokens);
     let mut program: Vec<Instruction> = tokens
         .iter()
@@ -108,7 +110,7 @@ fn tokens_to_program(tokens: &mut Vec<Token>) -> Vec<Instruction> {
     return program;
 }
 
-pub fn parse(text: String) -> Vec<Instruction> {
+pub fn parse(text: String) -> Program {
     let tokens = &mut text_to_tokens(text);
     return tokens_to_program(tokens);
 }
