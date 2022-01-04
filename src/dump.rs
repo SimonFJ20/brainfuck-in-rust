@@ -11,9 +11,13 @@ fn html_page(body: String) -> String {
         font-size: 1rem;
         box-sizing: border-box;
     }
+    body {
+        background-color: #aaa;
+    }
     table, tr, td {
         border: 1px solid black;
         border-collapse: collapse;
+        background-color: #fff;
     }
     table {
         max-width: 100%;
